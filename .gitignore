@@ -1,0 +1,4 @@
+lorenz_chaos
+lorenz_divergence
+*.o
+__pycache__/

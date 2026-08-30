@@ -1,0 +1,157 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+\title{Chaos in the Lorenz System:\\ The Butterfly Effect and the Lyapunov Exponent}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{The Lorenz System}
+
+The Lorenz system is a set of three coupled, nonlinear ordinary differential
+equations, originally derived by Edward Lorenz in 1963 as a drastically
+simplified model of atmospheric convection:
+
+\begin{align}
+\dot{x} &= \sigma (y - x) \\
+\dot{y} &= x(\rho - z) - y \\
+\dot{z} &= xy - \beta z
+\end{align}
+
+where $x, y, z \in \mathbb{R}$ are the state variables and $\sigma, \rho,
+\beta > 0$ are parameters. The classic chaotic regime uses
+\[
+\sigma = 10, \qquad \rho = 28, \qquad \beta = \frac{8}{3}.
+\]
+
+Despite being a smooth, deterministic, three-dimensional system, this choice
+of parameters produces trajectories that never repeat, remain bounded within
+a fractal set (the \emph{attractor}), and are extraordinarily sensitive to
+initial conditions.
+
+\section{Numerical Integration: 4th-Order Runge--Kutta}
+
+Given a system $\dot{\mathbf{s}} = f(\mathbf{s})$ with state
+$\mathbf{s} = (x, y, z)$, the classic RK4 method advances the state by a
+time step $h$ via
+
+\begin{align}
+k_1 &= f(\mathbf{s}_n) \\
+k_2 &= f\!\left(\mathbf{s}_n + \tfrac{h}{2} k_1\right) \\
+k_3 &= f\!\left(\mathbf{s}_n + \tfrac{h}{2} k_2\right) \\
+k_4 &= f(\mathbf{s}_n + h\, k_3) \\
+\mathbf{s}_{n+1} &= \mathbf{s}_n + \frac{h}{6}\left(k_1 + 2k_2 + 2k_3 + k_4\right)
+\end{align}
+
+This is fourth-order accurate: the local truncation error per step is
+$O(h^5)$, and the global error over a fixed time interval is $O(h^4)$. The
+implementation uses $h = 0.005$, which is small enough to keep the
+integration well within its stability region for the Lorenz parameters used
+here, while remaining fast enough to simulate tens of thousands of steps in
+a fraction of a second.
+
+\section{Sensitive Dependence on Initial Conditions}
+
+Let $\mathbf{s}_A(t)$ and $\mathbf{s}_B(t)$ be two trajectories of the same
+system with initial separation
+\[
+\delta_0 = \lVert \mathbf{s}_B(0) - \mathbf{s}_A(0) \rVert = \varepsilon,
+\]
+where $\varepsilon$ is arbitrarily small (in this project, $\varepsilon =
+10^{-8}$). For a chaotic system, the separation
+$\delta(t) = \lVert \mathbf{s}_B(t) - \mathbf{s}_A(t) \rVert$ grows, on
+average, \emph{exponentially}:
+\[
+\delta(t) \approx \delta_0\, e^{\lambda t}
+\]
+for as long as $\delta(t)$ remains small compared to the size of the
+attractor. The constant $\lambda$ is the \textbf{largest Lyapunov
+exponent}. Rearranging,
+\[
+\lambda \approx \frac{1}{t} \ln\!\left(\frac{\delta(t)}{\delta_0}\right).
+\]
+
+\begin{itemize}
+  \item If $\lambda \le 0$: nearby trajectories converge or stay together — the system is \emph{not} chaotic.
+  \item If $\lambda > 0$: nearby trajectories diverge exponentially — the system \emph{is} chaotic, and $1/\lambda$ is a natural estimate of the ``prediction horizon'': the timescale beyond which two initial conditions indistinguishable at measurement precision lead to unrelated outcomes.
+\end{itemize}
+
+For the classic Lorenz parameters, the widely cited reference value is
+\[
+\lambda \approx 0.905\ \text{(per unit time)}.
+\]
+
+\section{Benettin's Algorithm}
+
+Naively integrating two trajectories $\varepsilon$ apart and measuring
+$\delta(t)$ directly runs into a problem: $\delta(t)$ grows exponentially,
+so within a short time it saturates at the size of the attractor itself
+(here, tens of units) and the exponential-growth signal is lost in the
+nonlinear folding of the attractor. Benettin's method (also called the
+\emph{renormalization method}) fixes this:
+
+\begin{enumerate}
+  \item Integrate a reference trajectory $\mathbf{s}_{\text{ref}}(t)$ and a
+        perturbed trajectory $\mathbf{s}_{\text{pert}}(t)$, starting a
+        distance $\varepsilon$ apart, for a short interval of $N$ steps.
+  \item Measure the new separation $d = \lVert \mathbf{s}_{\text{pert}} -
+        \mathbf{s}_{\text{ref}} \rVert$.
+  \item Accumulate $\ln(d / \varepsilon)$ into a running sum.
+  \item \textbf{Rescale} $\mathbf{s}_{\text{pert}}$ back to distance exactly
+        $\varepsilon$ from $\mathbf{s}_{\text{ref}}$, \emph{along the same
+        direction of divergence}:
+        \[
+        \mathbf{s}_{\text{pert}} \leftarrow \mathbf{s}_{\text{ref}} +
+        \frac{\varepsilon}{d}\left(\mathbf{s}_{\text{pert}} -
+        \mathbf{s}_{\text{ref}}\right)
+        \]
+  \item Repeat for many renormalization cycles $r = 1, \dots, M$, each
+        covering a time interval $N h$.
+\end{enumerate}
+
+After $M$ renormalizations covering total time $T = M \cdot N h$, the
+largest Lyapunov exponent is estimated as
+\[
+\lambda \approx \frac{1}{T} \sum_{r=1}^{M} \ln\!\left(\frac{d_r}{\varepsilon}\right).
+\]
+
+This works because rescaling after every short interval keeps the
+perturbation small enough to stay in the locally linear regime around the
+reference trajectory (where the exponential-divergence approximation is
+valid), while the accumulated log-growth still correctly captures the
+average exponential rate over the whole attractor, including its folding
+and stretching.
+
+\subsection*{Parameters used in this project}
+\[
+\varepsilon = 10^{-8}, \quad N = 10 \text{ steps/renorm}, \quad
+M = 4000 \text{ renorms}, \quad h = 0.005
+\]
+giving a total integration time of $T = 4000 \times 10 \times 0.005 = 200$
+time units, over which the running estimate of $\lambda$ converges to
+\[
+\lambda \approx 0.9032,
+\]
+within $0.3\%$ of the reference value $0.905$.
+
+\section{Summary}
+
+\begin{center}
+\begin{tabular}{ll}
+\textbf{Quantity} & \textbf{Value / Method} \\
+\hline
+System & Lorenz equations, $\sigma=10,\ \rho=28,\ \beta=8/3$ \\
+Integrator & RK4, step size $h=0.005$ \\
+Chaos test & Two trajectories, $\varepsilon = 10^{-8}$ apart \\
+Divergence & Exponential: $\delta(t) \approx \varepsilon\, e^{\lambda t}$ \\
+Lyapunov exponent & $\lambda \approx 0.903$ (computed) vs.\ $0.905$ (reference) \\
+Prediction horizon & $1/\lambda \approx 1.1$ time units \\
+\end{tabular}
+\end{center}
+
+\end{document}
