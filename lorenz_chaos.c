@@ -16,17 +16,8 @@
  * rate is the Lyapunov exponent lambda. If lambda > 0, the system is chaotic;
  * the value of lambda tells you the "doubling time" of the divergence
  * (roughly, prediction horizon ~ 1/lambda).
- *
- * This program does two things:
- *   1. Integrates ONE trajectory and dumps it to lorenz_trajectory.csv
- *      (for plotting the classic butterfly-shaped attractor).
- *   2. Integrates TWO trajectories starting a tiny distance epsilon apart,
- *      periodically rescaling the separation back to epsilon (the standard
- *      Benettin algorithm), and accumulates the average exponential growth
- *      rate of their separation -> the largest Lyapunov exponent.
- *
- * Build:  gcc -O2 -o lorenz_chaos lorenz_chaos.c -lm
- * Run:    ./lorenz_chaos
+
+
  */
 
 #include <stdio.h>
