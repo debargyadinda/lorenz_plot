@@ -7,8 +7,8 @@
  * classic "butterfly effect" plot: two invisible-close starting points,
  * near-identical for a while, then rapidly and visibly diverging.
  *
- * Build:  gcc -O2 -o lorenz_divergence lorenz_divergence.c -lm
- * Run:    ./lorenz_divergence
+
+
  */
 
 #include <stdio.h>
