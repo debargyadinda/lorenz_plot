@@ -3,9 +3,7 @@
 plot_lorenz.py — visualize the Lorenz attractor, its Lyapunov exponent
 convergence, and the butterfly-effect divergence of two nearby trajectories.
 
-Run after:
-    ./lorenz_chaos          # writes lorenz_trajectory.csv, lyapunov_convergence.csv
-    ./lorenz_divergence     # writes lorenz_divergence.csv
+
 """
 import pandas as pd
 import matplotlib.pyplot as plt
