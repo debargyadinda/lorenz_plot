@@ -1,4 +1,8 @@
 lorenz_chaos
 lorenz_divergence
+*.exe
 *.o
 __pycache__/
+*.aux
+*.log
+*.out
