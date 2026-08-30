@@ -1,15 +1,4 @@
-/*
- * lorenz_divergence.c
- * -------------------
- * Companion program to lorenz_chaos.c. Runs TWO trajectories starting
- * 1e-8 apart (same setup as the Lyapunov calculation) WITHOUT rescaling,
- * and logs both plus their separation over time. This produces the
- * classic "butterfly effect" plot: two invisible-close starting points,
- * near-identical for a while, then rapidly and visibly diverging.
- *
 
-
- */
 
 #include <stdio.h>
 #include <math.h>
